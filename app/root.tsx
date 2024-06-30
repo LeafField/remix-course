@@ -5,11 +5,12 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import "./tailwind.css";
+import { LinksFunction } from "@remix-run/node";
+import styles from "~/styles/main.css?url";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -28,3 +29,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return <Outlet />;
 }
+
+export const links: LinksFunction = () => [
+  {
+    rel: "stylesheet",
+    href: styles,
+  },
+];
