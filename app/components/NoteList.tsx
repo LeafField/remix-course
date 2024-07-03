@@ -1,4 +1,4 @@
-import styles from "./NoteList.css";
+import styles from "./NoteList.css?url";
 import type { Notes } from "../data/notes";
 import { FC } from "react";
 
