@@ -1,34 +1,48 @@
-import { ActionFunction, LinksFunction, redirect } from "@remix-run/node";
+import {
+  ActionFunction,
+  LinksFunction,
+  MetaFunction,
+  redirect,
+} from "@remix-run/node";
 import NewNote, { links as newNoteLinks } from "../components/NewNote";
 import NoteList, { links as noteListLinks } from "../components/NoteList";
 import { getStoredNotes, storeNotes } from "../data/notes";
 import type { Note } from "../data/notes";
 import {
+  isRouteErrorResponse,
+  json,
   Link,
-  useActionData,
   useLoaderData,
   useRouteError,
 } from "@remix-run/react";
 
-const NotePage = () => {
+export default function NotePage() {
   const notes = useLoaderData<typeof loader>();
 
   return (
     <main>
       <NewNote />
-      <NoteList notes={notes} />
+      {notes && <NoteList notes={notes} />}
     </main>
   );
-};
+}
 
-export default NotePage;
-
-export const loader = async () => {
+export async function loader() {
   const notes = await getStoredNotes();
-  return notes;
-};
+  if (!notes || notes.length === 0) {
+    throw json(
+      { message: "Could not find any notes." },
+      {
+        status: 404,
+        statusText: "Not found",
+      }
+    );
+  }
 
-export const action: ActionFunction = async ({ request }) => {
+  return json(notes);
+}
+
+export async function action({ request }) {
   const formData = await request.formData();
   const noteData = Object.fromEntries(formData.entries());
 
@@ -41,22 +55,45 @@ export const action: ActionFunction = async ({ request }) => {
   const updateNotes = existingNote.concat(noteData as Note);
   await storeNotes(updateNotes);
   return redirect("/notes");
-};
+}
 
 export const links: LinksFunction = () => [
   ...newNoteLinks(),
   ...noteListLinks(),
 ];
 
+export const meta: MetaFunction = () => [
+  {
+    title: "All notes",
+  },
+  {
+    name: "description",
+    content: "Manage your notes",
+  },
+];
+
 export function ErrorBoundry() {
   const error = useRouteError();
-  return (
-    <main className="error">
-      <h1>An error occurred!</h1>
-      <p>{(error as any).message}</p>
-      <p>
-        Back to <Link to={"/"}>sefety</Link>
-      </p>
-    </main>
-  );
+  if (isRouteErrorResponse(error)) {
+    return (
+      <main className="error">
+        <h1>An error occurred!</h1>
+        <p>{error.statusText}</p>
+        <p>
+          Back to <Link to={"/"}>sefety</Link>
+        </p>
+      </main>
+    );
+  } else if (error instanceof Error) {
+    return (
+      <main className="error">
+        <h1>An error occurred!</h1>
+        <p>{error.message}</p>
+        <p>aaaa</p>
+        <p>
+          Back to <Link to={"/"}>sefety</Link>
+        </p>
+      </main>
+    );
+  }
 }

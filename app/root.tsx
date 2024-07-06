@@ -1,4 +1,5 @@
 import {
+  isRouteErrorResponse,
   Link,
   Links,
   Meta,
@@ -10,7 +11,6 @@ import {
 import { LinksFunction } from "@remix-run/node";
 import styles from "~/styles/main.css?url";
 import MainNavigation from "./components/MainNavigation";
-import { ErrorBoundaryComponent } from "@remix-run/react/dist/routeModules";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -39,31 +39,27 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  return (
-    <html lang="ja">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-        <title>An Error</title>
-      </head>
-      <body>
-        {/* <header>
-          <MainNavigation />
-        </header> */}
-        <main className="error">
-          <h1>An error occurred!</h1>
-          <p>{(error as any).message}</p>
-          <p>
-            Back to <Link to={"/"}>sefety</Link>
-          </p>
-        </main>
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
+  if (isRouteErrorResponse(error)) {
+    return (
+      <main className="error">
+        <h1>{error.statusText}</h1>
+        <p>{error.data?.message || "Something went wrong!"}</p>
+        <p>
+          Back to <Link to="/">safety</Link>!
+        </p>
+      </main>
+    );
+  } else if (error instanceof Error) {
+    return (
+      <main className="error">
+        <h1>An error occurred!</h1>
+        <p>{error.message}</p>
+        <p>
+          Back to <Link to={"/"}>sefety</Link>
+        </p>
+      </main>
+    );
+  }
 }
 
 export const links: LinksFunction = () => [
